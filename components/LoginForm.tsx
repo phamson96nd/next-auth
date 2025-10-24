@@ -15,8 +15,11 @@ import { Input } from "@/components/ui/input"
 import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema"
 import envConfig from "@/app/config"
 import { toast } from "sonner"
+import { useAppContext } from "@/app/AppProvider"
 
 export default function LoginForm() {
+  const { setSectionToken } = useAppContext()
+
   // 1. Define your form.
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
@@ -50,18 +53,33 @@ export default function LoginForm() {
         return data
       })
 
-      console.log(result.payload.message)
       toast("", {
         description: result.payload.message
-        // action: {
-        //   label: "Undo",
-        //   onClick: () => console.log("Undo"),
-        // },
       })
+      
+      const resultFromNextServer = await fetch('/api/auth', {
+        method: 'POST',
+        body: JSON.stringify(result),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }).then(async (res) => {
+        const payload = await res.json();
+        const data = {
+          status: res.status,
+          payload
+        }
+        if (!res.ok) {
+          throw data
+        }
+        return data
+      })
+      setSectionToken(resultFromNextServer.payload.data.token)
+
     } catch (errors: any) {
-      const error = errors.payload.errors as {field: string, message:string}[]
+      const error = errors.payload.errors as { field: string, message: string }[]
       const status = errors.status as number
-      if(status === 422) {
+      if (status === 422) {
         error.forEach((item) => {
           form.setError(item.field as 'email' | 'password', {
             type: 'server',
@@ -71,10 +89,6 @@ export default function LoginForm() {
       } else {
         toast("Errors", {
           description: errors.payload.message
-          // action: {
-          //   label: "Undo",
-          //   onClick: () => console.log("Undo"),
-          // },
         })
       }
     }

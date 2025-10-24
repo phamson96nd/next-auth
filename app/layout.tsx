@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Header from "@/components/Header";
 import { Toaster } from "@/components/ui/sonner"
+import AppProvider from "./AppProvider";
+import { cookies } from "next/headers";
 
 
 const geistSans = localFont({
@@ -26,14 +28,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = cookies()
+  const initialSessionToken = cookieStore.get('sessionToken')?.value || ''
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Header />
-        {children}
-        <Toaster />
+        <AppProvider initialSessionToken={initialSessionToken}>
+          {children}
+          <Toaster />
+        </AppProvider>
+
       </body>
     </html>
   );
