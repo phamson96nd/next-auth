@@ -12,25 +12,23 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { RegisterBody, RegisterBodyType } from "@/schemaValidations/auth.schema"
+import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema"
 import envConfig from "@/app/config"
 
-export default function RegisterForm() {
+export default function LoginForm() {
   // 1. Define your form.
-  const form = useForm<RegisterBodyType>({
-    resolver: zodResolver(RegisterBody),
+  const form = useForm<LoginBodyType>({
+    resolver: zodResolver(LoginBody),
     defaultValues: {
       email: "",
-      name: "",
       password: "",
-      confirmPassword: "",
     },
   })
 
   // 2. Define a submit handler.
-  async function onSubmit(values: RegisterBodyType) {
+  async function onSubmit(values: LoginBodyType) {
     const result = await fetch(
-      `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/register`,
+      `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/login`,
       {
         body: JSON.stringify(values),
         headers: {
@@ -45,22 +43,6 @@ export default function RegisterForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2 max-w-[800px]">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         <FormField
           control={form.control}
           name="email"
@@ -83,22 +65,6 @@ export default function RegisterForm() {
 
             <FormItem>
               <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input {...field} type="password" />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-
-            <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
               <FormControl>
                 <Input {...field} type="password" />
               </FormControl>
