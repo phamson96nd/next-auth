@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema"
 import envConfig from "@/app/config"
+import { toast } from "sonner"
 
 export default function LoginForm() {
   // 1. Define your form.
@@ -27,17 +28,58 @@ export default function LoginForm() {
 
   // 2. Define a submit handler.
   async function onSubmit(values: LoginBodyType) {
-    const result = await fetch(
-      `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/login`,
-      {
-        body: JSON.stringify(values),
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        method: 'POST'
+    try {
+      const result = await fetch(
+        `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/login`,
+        {
+          body: JSON.stringify(values),
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          method: 'POST'
+        }
+      ).then(async (res) => {
+        const payload = await res.json();
+        const data = {
+          status: res.status,
+          payload
+        }
+        if (!res.ok) {
+          throw data
+        }
+        return data
+      })
+
+      console.log(result.payload.message)
+      toast("", {
+        description: result.payload.message
+        // action: {
+        //   label: "Undo",
+        //   onClick: () => console.log("Undo"),
+        // },
+      })
+    } catch (errors: any) {
+      const error = errors.payload.errors as {field: string, message:string}[]
+      const status = errors.status as number
+      if(status === 422) {
+        error.forEach((item) => {
+          form.setError(item.field as 'email' | 'password', {
+            type: 'server',
+            message: item.message
+          })
+        })
+      } else {
+        toast("Errors", {
+          description: errors.payload.message
+          // action: {
+          //   label: "Undo",
+          //   onClick: () => console.log("Undo"),
+          // },
+        })
       }
-    ).then((res) => res.json())
-    console.log(result)
+    }
+
+
   }
 
   return (
