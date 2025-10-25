@@ -1,14 +1,24 @@
+import envConfig from '@/app/config';
 import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const res = await request.json();
-  const token = res.payload?.data?.token
+  const body = await request.json();
 
-  if (!token) {
-    return Response.json({ message: "Erros!" }, {
-      status: 400
-    })
+  const res = await fetch(`${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    return NextResponse.json({ error: data }, { status: res.status });
   }
+
+  // const { access_token, refresh_token, expires_in } = data;
+  const token = data.data.token
 
   cookies().set('sessionToken', token, {
     httpOnly: true,
@@ -26,5 +36,5 @@ export async function POST(request: Request) {
   })
 
 
-  return Response.json(res.payload, { status: 200 })
+  return Response.json(data, { status: 200 })
 }
